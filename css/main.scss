@@ -1,0 +1,16 @@
+//// system
+@import "var";
+@import "media";
+@import "mixin";
+@import "_libs/normalize";
+// @import "_libs/bs4";
+// @import "_libs/outline";
+
+////fonts
+@import "_fonts/fonts";
+//// svgIcon
+@import "_libs/_sprite"; //TODO изменить на норм
+//// main
+@import "defaults";
+@import "index";
+// @import "../templates/**/*";

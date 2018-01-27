@@ -1,0 +1,95 @@
+// //Var 
+// $sm: (min-width: 320px) and (max-width: 767px);
+// $md: (min-width: 768px) and (max-width: 1189px);
+// $lg: (min-width: 1190px);
+
+
+//Var
+$tab: 600px;
+$lap: 900px;
+$des: 1200px;
+$des-lg: 1800px;
+
+
+//Mobile first | sort rules big to small
+@mixin media($size) {
+  @if ($size==$tab) {
+    @media only screen and (min-width: $tab) {
+      @content;
+    }
+  }
+  @else if ($size==$lap) {
+    @media only screen and (min-width: $lap) {
+      @content;
+    }
+  }
+  @else if ($size==$des) {
+    @media only screen and (min-width: $des) {
+      @content;
+    }
+  }
+  @else if ($size==$des-lg) {
+    @media only screen and (min-width: $des-lg) {
+      @content;
+    }
+  }
+}
+//@mixin media($size) {
+//  @if ($size==$mob) {
+//    @media only screen and (max-width: $mob - 1) {
+//      @content;
+//    }
+//  }
+//  @else if ($size==$des-lg) {
+//    @media only screen and (max-width: $des-lg - 1) and (min-width: $des) {
+//      @content;
+//    }
+//  }
+//  @else if ($size==$des) {
+//    @media only screen and (max-width: $des - 1) and (min-width: $tab) {
+//      @content;
+//    }
+//  }
+//  @else if ($size==$tab) {
+//    @media only screen and (max-width: $tab - 1) and (min-width: $mob) {
+//      @content;
+//    }
+//  }
+//}
+
+
+//Var vanila
+//$sm: (min-width: 320px) and (max-width: 767px);
+//$md: (min-width: 768px) and (max-width: 1189px);
+//$lg: (min-width: 1200px);
+
+
+
+//////Variables
+////Mobile first
+// $mob: 600px;
+// $tab: 900px;
+// $des: 1200px;
+// $des-lg: 1800px;
+//
+//// Mobile first
+// @mixin media($size) {
+//   @if $size==$mob {
+//     @media only screen and (max-width: $mob - 1) {
+//       @content;
+//     }
+//   }
+//     @else {
+//       @media only screen and (min-width: $size) {
+//         @content;
+//       }
+//     }
+// }
+
+
+
+ //@mixin media($size) {
+ //  @media only screen and (min-width: $size) {
+ //    @content;
+ //  }
+ //}

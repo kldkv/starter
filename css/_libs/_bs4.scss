@@ -1,0 +1,64 @@
+      /*
+      // Bootstrap 4 mixin
+      */
+
+      $columns: 12;
+      $atom: (100% / $columns);
+      /**/
+
+      @mixin bs($what, $number:"") {
+        @if ($what=="container") {
+          position: relative;
+          margin-left: auto;
+          margin-right: auto;
+          @if (type-of($number)=="number") {
+            width: $number;
+            max-width: 100%;
+          }
+        }
+        @if ($what=="row") {
+          display: flex;
+          flex-wrap: wrap;
+        }
+        @if ($what=="col") {
+          position: relative;
+          width: 100%;
+          min-height: 1px;
+          @if ($number=="auto") {
+            flex: 0 0 auto;
+            width: auto;
+          }
+          @if (type-of($number)=="number") {
+            @if ($number==0) {
+              flex-grow: 1;
+              max-width: 100%;
+              flex-basis: 0;
+            }
+            @else {
+              flex: 0 0 $number * $atom;
+              max-width: $number * $atom;
+            }
+          }
+        }
+        @if ($what=="offset") {
+          @if (type-of($number)=="number") {
+            margin-left: $number * $atom;
+          }
+        }
+        @if ($what=="push") {
+          @if ($number=="auto") {
+            left: auto;
+          }
+          @if (type-of($number)=="number") {
+            left: $number * $atom;
+          }
+        }
+        @if ($what=="pull") {
+          @if ($number=="auto") {
+            right: auto;
+          }
+          @if (type-of($number)=="number") {
+            right: $number * $atom;
+          }
+        }
+      }

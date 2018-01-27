@@ -1,0 +1,30 @@
+////Font
+//Type
+$font: "", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygdeen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+
+//Size
+$font-size__main: 18px;
+$font-size__h1: 30px;
+$font-size__h2: 22px;
+$font-size__h3: 22px;
+
+////Colors
+
+//Text
+$color__text--main: rgb(0, 0, 0);
+$color__text--main--light: rgb(255, 255, 255);
+$color__text--sub: rgb(229, 229, 229);
+
+//Background & Border
+$color__bg--main: rgb(255, 255, 255);
+$color__bg--sub: rgb(231, 243, 216);
+
+//Elements
+$color__element--main: rgb(133, 197, 59);
+$color__element--main-dark: rgb(105, 156, 47);
+$color__element--sub: rgb(209, 233, 180);
+$color__element--sub-dark: rgb(178, 197, 157);
+
+//Attention
+$color__attention--main:rgb(255, 102, 102);
+$color__attention--sub: rgb(255, 194, 194);

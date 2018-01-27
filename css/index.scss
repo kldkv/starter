@@ -1,0 +1,16 @@
+.app {
+  &__wrapper {
+
+  }
+  &__loader {
+
+    & circle {
+      &.path {
+        fill: blue;
+      }
+      &.path2 {
+        fill: grey;
+      }
+    }
+  }
+}
