@@ -5,6 +5,8 @@ const
       gulp =              require('gulp'),
       del =               require('del'),
       fs =                require('fs'),
+      noopGulp =          require('gulp-noop'),
+      noopWP =            require('noop-webpack-plugin'),
       //server
       browserSync =       require('browser-sync').create(),
       //gulp plugins
@@ -26,6 +28,8 @@ const
       svgmin =            require('gulp-svgmin'),
       webp =              require('gulp-webp'),
       zopfli =            require('gulp-zopfli-fork'),
+      iconfont =          require('gulp-iconfont'),
+      consolidate =       require('gulp-consolidate'),
       //post css
       autoprefixer =      require('autoprefixer'),
       // colorblind = require('postcss-colorblind'),
@@ -35,25 +39,28 @@ const
       UglifyJSPlugin =    require('uglifyjs-webpack-plugin'),
       ProgressBarPlugin = require('progress-bar-webpack-plugin');
 
-let err = event => console.error(`${event}`);
+const ENV    = process.env.NODE_ENV,
+      isProd = ENV === 'production',
+      isDev  = ENV === 'development',
+      err    = event => console.error(`${event}`);
 
 // базовые пути
 const baseUrl = {
   dist: './dist',
   src:  './src'
 };
+
 const path = {
   dist: {
     html:   `${baseUrl.dist}/`,
     js:     `${baseUrl.dist}/js/`,
     css:    `${baseUrl.dist}/css/`,
-    maps:   `${baseUrl.dist}/css/maps/`,
     img:    `${baseUrl.dist}/img/`,
     fonts:  `${baseUrl.dist}/fonts/`,
     locale: `${baseUrl.dist}/locale/`,
   },
   src: {
-    html:      `${baseUrl.src}/*.html`,
+    html:      `${baseUrl.src}/`,
     jsVendors: `${baseUrl.src}/js/vendors/`,
     js:        `${baseUrl.src}/js/app/`,
     css:       `${baseUrl.src}/css/`,
@@ -63,20 +70,27 @@ const path = {
     locale:    `${baseUrl.src}/locale/`
   }
 };
+
 const files = {
   html:               `${baseUrl.src}/*.html`,
   template:           `${baseUrl.src}/template/**/*.{html,twig,hbs}`,
   data:               `${baseUrl.src}/*.json`,
-  jsVendors:          `${baseUrl.src}/js/vendors/**/*.js`,
+  jsVendors:          `${baseUrl.src}/js/vendors/**/*.{js,map}`,
   js:                 `${baseUrl.src}/js/app/*.js`,
-  css:                `${baseUrl.src}/css/**/*.scss`,
+  css:                `${baseUrl.src}/css/**/*.{scss,css}`,
   img:                `${baseUrl.src}/img/**/*.*`,
   svgSprite:          `${baseUrl.src}/img/sprite/svg/**/*.svg`,
   svgSpriteColorize:  `${baseUrl.src}/img/sprite/svg/colorize/*.svg`,
   svgSpriteColorless: `${baseUrl.src}/img/sprite/svg/colorless/*.svg`,
-  fonts:              `${baseUrl.src}/fonts/**/*.*`,
+  fonts:              `${baseUrl.src}/fonts/**/*.{woff,woff2}`,
   locale:             `${baseUrl.src}/locale/*.js`
 };
+
+if (typeof ENV === 'undefined') {
+  console.log('⚠️ ALARM ⚠️');
+  console.log('You are not set NODE_ENV. Try "npm run gulp-dev"');
+  console.log('⚠️ ALARM ⚠️');
+}
 
 // Утилиты
 gulp.task('clean', () => {
@@ -87,16 +101,19 @@ gulp.task('clean', () => {
   });
 });
 
-gulp.task('watch:dev', () => {
+gulp.task('watch', () => {
   gulp.watch([
     files.img,
     files.fonts,
+    files.html,
+    files.jsVendors,
+    files.template,
     files.locale,
   ], gulp.parallel('assets', 'svg:sprite', 'svg:injection'));
 
   gulp.watch([
     files.css
-  ], gulp.parallel('style:dev'));
+  ], gulp.parallel('style'));
 
   gulp.watch([
     files.html,
@@ -118,6 +135,130 @@ gulp.task('browser-sync', () => {
 });
 
 // Сборки
+
+gulp.task('style', () => {
+  return new Promise((resolved, rejected) => {
+    gulp
+      .src(`${files.css}`)
+      .pipe(isDev ? sourcemaps.init() : noopGulp())
+      .pipe(sass().on('error', sass.logError))
+      .pipe(gcmq())
+      .pipe(postcss([autoprefixer('last 2 version', 'ie > 10', 'safari > 6')]))
+      .pipe(isProd ? csso({
+        restructure: true,
+        debug: false
+      }) : noopGulp())
+      .pipe(isDev ? sourcemaps.write('./maps') : noopGulp())
+      .pipe(gulp.dest(path.dist.css))
+      .on('end', () => resolved())
+      .on('error', () => rejected())
+  });
+});
+
+gulp.task('assets', () => {
+  return new Promise((resolved, rejected) => {
+    gulp
+      .src([
+        files.img,
+        files.fonts,
+        files.html,
+        files.jsVendors,
+        files.template,
+        files.locale,
+      ], {
+        base: baseUrl.src
+      })
+      .pipe(newer(baseUrl.dist))
+      .pipe(gulp.dest(baseUrl.dist))
+      .on('end', () => resolved())
+      .on('error', () => rejected())
+  });
+});
+
+gulp.task('webpack', () => {
+  return new Promise((resolved, rejected) => {
+    gulp
+      .src(`${path.src.js}/app.js`)
+      .pipe(webpackGulp({
+        watch: isDev ? true : false,
+        watchOptions: {
+          aggregateTimeout: 300
+        },
+        devtool: 'source-map',
+        entry: {
+          app: `${path.src.js}/app.js`,
+        },
+        plugins: [
+          isProd ? new UglifyJSPlugin({
+            uglifyOptions: {
+              beautify: false,
+              ecma: 6,
+              compress: true,
+              comments: false
+            }
+          }) : noopWP,
+          new ProgressBarPlugin()
+        ],
+        output: {
+          filename: '[name].js',
+        }
+      }))
+      .pipe(gulp.dest(path.dist.js))
+      .on('end', () => resolved())
+      .on('error', () => rejected())
+  });
+});
+
+gulp.task('templater', () => {
+  return new Promise((resolved, rejected) => {
+    gulp
+      .src(files.html)
+      .pipe(nunjucks.compile(JSON.parse(fs.readFileSync(`${baseUrl.src}/data.json`, 'utf8'))))
+      .on('error', function (err) {
+        console.log('gulp-data error: ' + err)
+      })
+      .pipe(gulp.dest(baseUrl.dist))
+      .on('end', () => resolved())
+      .on('error', () => rejected())
+  });
+});
+
+gulp.task('ifont', () => {
+  return new Promise((resolved, rejected) => {
+    gulp
+      .src('./src/img/sprite/svg/colorless/*.svg')
+      .pipe(iconfont({
+        fontName: 'ifont',
+        prependUnicode: true,
+        formats: ['ttf'],
+        normalize: true,
+        fontHeight: 1001
+      }))
+      .on('glyphs', (glyphs, options) => {
+        gulp
+          .src(`${path.src.css}/_libs/_ifont.tmpl.scss`)
+          .pipe(consolidate('lodash', {
+            glyphs: glyphs.map((glyph) => {
+              return {
+                name: glyph.name,
+                codepoint: glyph.unicode[0].charCodeAt(0)
+              }
+            }),
+            fontName: 'ifont',
+            fontPath: './../fonts/',
+            className: 'ifont'
+          }))
+          .pipe(rename((path) => {
+            path.basename = '_ifont'
+          }))
+          .pipe(gulp.dest(`${path.src.css}/_libs`))
+      })
+      .pipe(gulp.dest(`${path.src.css}`))
+      .on('end', () => resolved())
+      .on('error', () => rejected())
+  });
+});
+
 gulp.task('svg:sprite', () => {
   return new Promise((resolved, rejected) => {
     gulp
@@ -148,7 +289,7 @@ gulp.task('svg:sprite', () => {
           symbol: {
             render: {
               scss: {
-                template: `${path.src.svgSprite}/svg.scss`,
+                template: `${path.src.css}/_libs/_svg-sprite.tmpl.scss`,
                 dest: `./../${path.src.css}/_libs/_sprite.scss`,
               }
             },
@@ -157,108 +298,6 @@ gulp.task('svg:sprite', () => {
         }
       }))
       .pipe(gulp.dest('./'))
-      .on('end', () => resolved())
-      .on('error', () => rejected())
-  });
-});
-
-gulp.task('style:dev', () => {
-  return new Promise((resolved, rejected) => {
-    gulp
-      .src(`${path.src.css}/main.scss`)
-      .pipe(bulkSass())
-      .pipe(sourcemaps.init())
-      .pipe(sass().on('error', sass.logError))
-      // .pipe(gcmq())
-      .pipe(postcss([autoprefixer('last 2 version', 'ie 10')]))
-      .pipe(sourcemaps.write('./maps'))
-      .pipe(gulp.dest(path.dist.css))
-      .on('end', () => resolved())
-      .on('error', () => rejected())
-  })
-});
-
-gulp.task('style:prod', () => {
-  return new Promise((resolved, rejected) => {
-    gulp
-      .src(`${path.src.css}/main.scss`)
-      .pipe(bulkSass())
-      .pipe(sass().on('error', sass.logError))
-      .pipe(gcmq())
-      .pipe(postcss([autoprefixer('last 10 version', 'ie 10')]))
-      .pipe(csso({
-        restructure: true,
-        debug: false
-      }))
-      .pipe(gulp.dest(path.dist.css))
-      .on('end', () => resolved())
-      .on('error', () => rejected())
-  });
-});
-
-gulp.task('assets', () => {
-  return new Promise((resolved, rejected) => {
-    gulp
-      .src([
-        files.img,
-        files.fonts,
-        files.html,
-        files.jsVendors,
-        files.template,
-        // files.locale,
-      ], {
-        base: baseUrl.src
-      })
-      .pipe(newer(baseUrl.dist))
-      .pipe(gulp.dest(baseUrl.dist))
-      .on('end', () => resolved())
-      .on('error', () => rejected())
-  });
-});
-
-gulp.task('webpack:dev', () => {
-  return new Promise((resolved, rejected) => {
-    gulp
-      .src(`${path.src.js}/app.js`)
-      .pipe(webpackGulp({
-        watch: true,
-        watchOptions: {
-          aggregateTimeout: 300
-        },
-        devtool: 'source-map',
-        entry: {
-          app: `${path.src.js}/app.js`,
-        },
-        plugins: [
-          // new UglifyJSPlugin({
-          //   uglifyOptions: {
-          //     beautify: false,
-          //     ecma: 6,
-          //     compress: true,
-          //     comments: false
-          //   }
-          // }),
-          // new ProgressBarPlugin()
-        ],
-        output: {
-          filename: '[name].js',
-        }
-      }))
-      .pipe(gulp.dest(path.dist.js))
-      .on('end', () => resolved())
-      .on('error', () => rejected())
-  });
-});
-
-gulp.task('templater', () => {
-  return new Promise((resolved, rejected) => {
-    gulp
-      .src(files.html)
-      .pipe(nunjucks.compile(JSON.parse(fs.readFileSync(`${baseUrl.src}/data.json`, 'utf8'))))
-      .on('error', function (err) {
-        console.log('gulp-data error: ' + err)
-      })
-      .pipe(gulp.dest(baseUrl.dist))
       .on('end', () => resolved())
       .on('error', () => rejected())
   });
@@ -326,7 +365,7 @@ gulp.task('font', () => {
     gulp
       .src(`${path.src.fonts}/*.ttf`)
       .pipe(fontmin({
-        text: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя1234567890-=!@#$%^&*()_+,."№;:/\\?'
+        text: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя1234567890-=!@#$%^&*()_+,."№;:/\\?\''
       }))
       .pipe(rename((path) => {
         path.basename += '.min'
@@ -338,6 +377,10 @@ gulp.task('font', () => {
 });
 
 // Таски
-gulp.task('compress:prod', gulp.parallel('brotli', 'zopfli'));
+gulp.task('compress', gulp.parallel('brotli', 'zopfli'));
 
-gulp.task('build:dev', gulp.series('svg:sprite', gulp.parallel('assets', 'style:dev', 'webpack:dev', 'templater', 'browser-sync', 'watch:dev')));
+gulp.task('build', gulp.series('svg:sprite', gulp.parallel('assets', 'style', 'webpack', 'templater')));
+
+gulp.task('dev', gulp.series('svg:sprite', gulp.parallel('assets', 'style', 'webpack', 'templater', 'watch')));
+
+gulp.task('dev:browserSync', gulp.series('svg:sprite', gulp.parallel('assets', 'style', 'webpack', 'templater', 'browser-sync', 'watch')));

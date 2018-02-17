@@ -1,0 +1,21 @@
+root = true
+
+[*]
+charset = utf-8
+
+# Убрать пробелы из концов строк.
+trim_trailing_whitespace = true
+
+# Для всех файлов используем unix-совместимые переносы строк
+end_of_line = lf
+
+# В конце файла всегда будет новая строка
+insert_final_newline = true
+
+# Отступы в 2 пробела
+indent_style = space
+indent_size = 2
+
+[*.md]
+
+trim_trailing_whitespace = false

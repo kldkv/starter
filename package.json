@@ -4,21 +4,29 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "gulp build:dev"
+    "gulp-build-dev": "NODE_ENV='development' gulp build",
+    "gulp-build-prod": "NODE_ENV='production' gulp build",
+    "gulp-dev": "NODE_ENV='development' gulp dev",
+    "gulp-dev-bs": "NODE_ENV='development' gulp dev:browserSync",
+    "gulp-clean": "NODE_ENV='development' gulp clean"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "autoprefixer": "^7.2.5",
+    "autoprefixer": "^8.0.0",
     "browser-sync": "^2.23.6",
     "del": "^3.0.0",
+    "eslint": "^4.18.0",
     "gulp": "^4.0.0",
     "gulp-brotli": "^1.2.1",
     "gulp-cheerio": "^0.6.3",
+    "gulp-consolidate": "^0.2.0",
     "gulp-csso": "^3.0.1",
     "gulp-fontmin": "^0.7.4",
-    "gulp-group-css-media-queries": "^1.2.0",
+    "gulp-group-css-media-queries": "^1.2.2",
+    "gulp-iconfont": "^9.1.0",
     "gulp-newer": "^1.4.0",
+    "gulp-noop": "^1.0.0",
     "gulp-nunjucks": "^3.1.1",
     "gulp-postcss": "^7.0.1",
     "gulp-rename": "^1.2.2",
@@ -26,14 +34,27 @@
     "gulp-sass": "^3.1.0",
     "gulp-sass-bulk-import": "^1.0.1",
     "gulp-sourcemaps": "^2.6.4",
+    "gulp-strip-debug": "^2.0.0",
     "gulp-svg-inline": "^1.0.1",
     "gulp-svg-sprite": "^1.3.7",
     "gulp-svgmin": "^1.2.4",
     "gulp-webp": "^3.0.0",
     "gulp-zopfli-fork": "^1.0.2",
+    "noop-webpack-plugin": "^1.0.1",
     "progress-bar-webpack-plugin": "^1.10.0",
-    "uglifyjs-webpack-plugin": "^1.1.6",
-    "webpack": "^3.10.0",
-    "webpack-stream": "^4.0.0"
+    "stylelint": "^8.4.0",
+    "stylelint-config-standard": "^18.0.0",
+    "uglifyjs-webpack-plugin": "^1.2.0",
+    "webpack": "^3.11.0",
+    "webpack-stream": "^4.0.1"
+  },
+  "dependencies": {
+    "backbone": "^1.3.3",
+    "backbone.marionette": "^3.5.1",
+    "backbone.radio": "^2.0.0",
+    "jquery": "^3.3.1",
+    "lodash": "^4.17.5",
+    "twig": "^1.10.5",
+    "underscore": "^1.8.3"
   }
 }
