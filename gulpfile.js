@@ -3,6 +3,7 @@
 const
       //core
       gulp =              require('gulp'),
+      del =               require('del'),
       fs =                require('fs'),
       //server
       browserSync =       require('browser-sync').create(),
@@ -17,7 +18,6 @@ const
       postcss =           require('gulp-postcss'),
       rename =            require('gulp-rename'),
       replace =           require('gulp-replace'),
-      rimraf =            require('gulp-rimraf'),
       sass =              require('gulp-sass'),
       bulkSass =          require('gulp-sass-bulk-import'),
       sourcemaps =        require('gulp-sourcemaps'),
@@ -80,14 +80,10 @@ const files = {
 
 // Утилиты
 gulp.task('clean', () => {
-  new Promise((resolved, rejected) => {
-    gulp
-      .src(baseUrl.dist, {
-        read: false
-      })
-      .on('error', () => console.log('Nothing to delete. Maybe'))
-      .pipe(rimraf());
-    resolved();
+  return new Promise((resolved, rejected) => {
+    del(baseUrl.dist).then((path) => {
+      return resolved();
+    });
   });
 });
 
